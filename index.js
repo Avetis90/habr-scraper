@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const scrap = require('./scraper');
+const Company = require('./models/Company')
 
 const app = express();
 const {MONGODB} = require('./config.js');
@@ -11,12 +12,19 @@ mongoose
         console.log(`Database is connected !`);
 
         app.get('/companies', (req, res) => {
-            scrap().then(response => {
-                console.log(response,'response')
+
+            let start = req.query.start;
+            let end = req.query.end;
+            scrap({start, end}).then(response => {
+                console.log(response, 'response')
             })
             res.send('started')
         })
-        app.listen(8088, () => {
-            console.log(`Server is running`)
+        app.get('/list', async (req, res) => {
+            const list = await Company.find()
+            res.send(list)
+        })
+        app.listen(8081, () => {
+            console.log(`Server is running 8081`)
         })
     })

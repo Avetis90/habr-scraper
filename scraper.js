@@ -1,31 +1,20 @@
 const puppeteer = require("puppeteer");
 const Company = require('./models/Company')
+const emailScraper = require('./emailScraper')
 
-module.exports = async () => {
+module.exports = async (options) => {
 
-    const getEmails = async url => {
-        const partnerPage = await browser.newPage();
-        await partnerPage.goto(url);
-        const email = await partnerPage.evaluate(() => {
-                const result = Array.from(document.querySelectorAll("div.contacts .contact"));
-                const data = result.map(el => {
-                    if (el.querySelector('.type').innerText.trim() === 'Email:') {
-                        return el.querySelector('.value a').innerText
-                    }
-                })
-                return data.filter(d => d != null)
-            }
-        );
-        await partnerPage.close();
-        return email
+    if (!parseInt(options.start) && !parseInt(options.end)) {
+        return
     }
-
     // Extract partners on the page, recursively check the next page in the URL pattern
     const extractPartners = async url => {
 
         // Scrape the data we want
         const page = await browser.newPage();
-        await page.goto(url);
+        await page.exposeFunction('emailScraper', emailScraper);
+        await page.setDefaultNavigationTimeout(0)
+        await page.goto(url, {waitUntil: 'networkidle2'}).catch(e => void 0);
         const partnersOnPage = await page.evaluate(() => {
                 const result = Array.from(document.querySelectorAll("div.companies-item"));
                 const data = result.map(compact => {
@@ -38,8 +27,11 @@ module.exports = async () => {
                         //email
                     }
                 });
-
-                return data
+                const withEmail = Promise.all(data.map(async el => {
+                    const emails = await emailScraper(el.link);
+                    return {...el, emails}
+                }))
+                return withEmail
             }
         );
         //console.log(partnersOnPage)
@@ -52,9 +44,10 @@ module.exports = async () => {
         } else {
             // Go fetch the next page ?page=X+1
             const nextPageNumber = parseInt(url.match(/page=(\d+)$/)[1], 10) + 1;
-            // if (nextPageNumber === 2) {
-            //     return partnersOnPage
-            // }
+            console.log('nextPageNumber',nextPageNumber)
+            if (nextPageNumber > parseInt(options.end)) {
+                return partnersOnPage
+            }
             const nextUrl = `https://career.habr.com/companies?category_root_id=258822&page=${nextPageNumber}`;
 
             return partnersOnPage.concat(await extractPartners(nextUrl))
@@ -63,18 +56,19 @@ module.exports = async () => {
 
     const browser = await puppeteer.launch();
     const firstUrl =
-        "https://career.habr.com/companies?category_root_id=258822&page=1";
+        `https://career.habr.com/companies?category_root_id=258822&page=${parseInt(options.start)}`;
     const partners = await extractPartners(firstUrl);
 
 
     // Todo: Update database with partners
-    console.log(partners);
+    //console.log(partners);
     /*const email = await getEmails('https://career.habr.com/companies/napoleonit')
     console.log(email,'email')*/
 
-    const c = await Company.insertMany(partners).then(res => console.log(res, 'insertMany')).catch(err => console.log(err))
-    console.log(c, 'created')
+    const c = await Company.insertMany(partners).then(res => console.log('insertMany')).catch(err => console.log(err))
+    //console.log(c, 'created')
 
     await browser.close();
+
     return c
 };
