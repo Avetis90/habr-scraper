@@ -27,11 +27,9 @@ module.exports = async (options) => {
                         //email
                     }
                 });
-                const withEmail = Promise.all(data.map(async el => {
-                    const emails = await emailScraper(el.link);
-                    return {...el, emails}
-                }))
-                return withEmail
+                const list = emailScraper(data)
+                return list
+
             }
         );
         //console.log(partnersOnPage)
@@ -44,7 +42,7 @@ module.exports = async (options) => {
         } else {
             // Go fetch the next page ?page=X+1
             const nextPageNumber = parseInt(url.match(/page=(\d+)$/)[1], 10) + 1;
-            console.log('nextPageNumber',nextPageNumber)
+            console.log('nextPageNumber', nextPageNumber)
             if (nextPageNumber > parseInt(options.end)) {
                 return partnersOnPage
             }
@@ -66,7 +64,7 @@ module.exports = async (options) => {
     console.log(email,'email')*/
 
     const c = await Company.insertMany(partners).then(res => console.log('insertMany')).catch(err => console.log(err))
-    //console.log(c, 'created')
+    console.log(c, 'created')
 
     await browser.close();
 

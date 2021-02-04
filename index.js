@@ -16,7 +16,7 @@ mongoose
             let start = req.query.start;
             let end = req.query.end;
             scrap({start, end}).then(response => {
-                console.log(response, 'response')
+                console.log( 'finished')
             })
             res.send('started')
         })

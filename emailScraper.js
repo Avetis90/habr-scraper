@@ -1,8 +1,8 @@
 const puppeteer = require("puppeteer");
 
-module.exports = async (url) => {
+module.exports = async (data) => {
     //console.log(url)
-    const getEmails = async () => {
+    const getEmails = async (url) => {
         const partnerPage = await browser.newPage();
         await partnerPage.setDefaultNavigationTimeout(0)
         await partnerPage.goto(url, {waitUntil : 'networkidle2' }).catch(e => void 0);
@@ -23,7 +23,10 @@ module.exports = async (url) => {
 
     const browser = await puppeteer.launch();
 
-    const emailList = await getEmails();
+    const emailList = await Promise.all(data.map(async el => {
+        const emails = await getEmails(el.link);
+        return {...el, emails}
+    }))
     let  pages = await browser.pages();
     await Promise.all(pages.map(page =>page.close()));
     await browser.close();
