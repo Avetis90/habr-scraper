@@ -2,13 +2,16 @@
   "name": "scrapper",
   "version": "1.0.0",
   "description": "scrapper for xabr",
-  "main": "index.js",
+  "main": "scraper.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "nodemon index"
   },
   "author": "Avetis",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.11.15",
     "puppeteer": "^6.0.0"
   }
 }
