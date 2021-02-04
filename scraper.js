@@ -57,14 +57,7 @@ module.exports = async (options) => {
         `https://career.habr.com/companies?category_root_id=258822&page=${parseInt(options.start)}`;
     const partners = await extractPartners(firstUrl);
 
-
-    // Todo: Update database with partners
-    //console.log(partners);
-    /*const email = await getEmails('https://career.habr.com/companies/napoleonit')
-    console.log(email,'email')*/
-
     const c = await Company.insertMany(partners).then(res => console.log('insertMany')).catch(err => console.log(err))
-    console.log(c, 'created')
 
     await browser.close();
 

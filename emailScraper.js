@@ -1,7 +1,6 @@
 const puppeteer = require("puppeteer");
 
 module.exports = async (data) => {
-    //console.log(url)
     const getEmails = async (url) => {
         const partnerPage = await browser.newPage();
         await partnerPage.setDefaultNavigationTimeout(0)
@@ -16,7 +15,6 @@ module.exports = async (data) => {
                 return data.filter(d => d != null)
             }
         );
-        //console.log(email,'email')
         await partnerPage.close();
         return email
     }
@@ -27,9 +25,9 @@ module.exports = async (data) => {
         const emails = await getEmails(el.link);
         return {...el, emails}
     }))
+    const filtered = await emailList.filter(el => el.emails.length)
     let  pages = await browser.pages();
     await Promise.all(pages.map(page =>page.close()));
     await browser.close();
-    console.log(emailList,'emailList')
-    return emailList
+    return filtered
 }
